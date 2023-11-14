@@ -67,12 +67,7 @@ def usersCRUD():
         messagebox.showinfo("Éxito", "Usuario creado exitosamente")
 
     def read_user():
-        name = name_entry.get()
-        user = users.find_one({"name": name})
-        if user:
-            user_info_label.config(text=f"Información del usuario:\n{user}")
-        else:
-            user_info_label.config(text="Usuario no encontrado")
+        user_info_label.config(text=f"Lista de usuarios:\n{users.find()}")
 
     def update_user():
         user_id = ObjectId(id_entry.get())
@@ -134,17 +129,13 @@ def articlesCRUD():
         title = title_entry.get()
         date = date_entry.get()
         text = text_entry.get("1.0", tk.END)  # Obtiene el contenido del Entry de texto
+
         article = createArticle(title, date, text)
         articles.insert_one(article).inserted_id
         messagebox.showinfo("Éxito", "Artículo creado exitosamente")
 
     def read_article():
-        title = title_entry.get()
-        article = articles.find_one({"title": title})
-        if article:
-            article_info_label.config(text=f"Información del artículo:\n{article}")
-        else:
-            article_info_label.config(text="Artículo no encontrado")
+        article_info_label.config(text=f"Información del artículo:\n{articles.find()}")
 
     def update_article():
         article_id = ObjectId(id_entry.get())
@@ -216,12 +207,7 @@ def commentsCRUD():
         messagebox.showinfo("Éxito", "Comentario creado exitosamente")
 
     def read_comment():
-        name = name_entry.get()
-        comment = comments.find_one({"name": name})
-        if comment:
-            comment_info_label.config(text=f"Información del comentario:\n{comment}")
-        else:
-            comment_info_label.config(text="Comentario no encontrado")
+        comment_info_label.config(text=f"Lista de comentarios:\n{comments.find()}")
 
     def update_comment():
         comment_id = ObjectId(id_entry.get())
@@ -287,12 +273,7 @@ def categoriesCRUD():
         messagebox.showinfo("Éxito", "Categoría creada exitosamente")
 
     def read_categorie():
-        name = name_entry.get()
-        category = categories.find_one({"name": name})
-        if category:
-            category_info_label.config(text=f"Información de la categoría:\n{category}")
-        else:
-            category_info_label.config(text="Categoría no encontrada")
+        category_info_label.config(text=f"Lista de categorias:\n{categories.find()}")
 
     def update_categorie():
         category_id = ObjectId(id_entry.get())
@@ -358,12 +339,7 @@ def tagsCRUD():
         messagebox.showinfo("Éxito", "Tag creado exitosamente")
 
     def read_tag():
-        name = name_entry.get()
-        tag = tags.find_one({"name": name})
-        if tag:
-            tag_info_label.config(text=f"Información del tag:\n{tag}")
-        else:
-            tag_info_label.config(text="Tag no encontrado")
+        tag_info_label.config(text=f"Información del tag:\n{tags.find()}")
 
     def update_tag():
         tag_id = ObjectId(id_entry.get())
