@@ -5,6 +5,8 @@ from controllers.comments import *
 from controllers.categories import *
 from controllers.tags import *
 from bson import ObjectId
+import tkinter as tk
+from tkinter import messagebox
 
 url = "mongodb://localhost:27017"
 
@@ -26,164 +28,396 @@ categories = db.categories
 comments = db.comments
 tags = db.tags
 
-print("PYTHON CRUD")
-print("1.-Users")
-print("2.-Articles")
-print("3.-Comments")
-print("4.-Categories")
-print("5.-Tags")
-collection = int(input("Ingrese el numero de la categoria que desea modificar o ver: "))
+def show_menu():
+    def handle_category(category):
+        if category == 'Users':
+            usersCRUD()
+        elif category == 'Articles':
+            articlesCRUD()
+        elif category == 'Comments':
+            commentsCRUD()
+        elif category == 'Categories':
+            categoriesCRUD()
+        elif category == 'Tags':
+            tagsCRUD()
+
+    categories = ["Users", "Articles", "Comments", "Categories", "Tags"]
+
+    menu_window = tk.Tk()
+    menu_window.title("Python CRUD")
+
+    label = tk.Label(menu_window, text="Seleccione una de las siguientes opciones a trabajar:")
+    label.pack(pady=10)  
+
+    frame = tk.Frame(menu_window)
+    frame.pack()
+
+    for category in categories:
+        category_button = tk.Button(frame, text=category, command=lambda c=category: handle_category(c))
+        category_button.pack(side=tk.LEFT, padx=5)
+
+    menu_window.mainloop()
 
 def usersCRUD():
-    print("Users CRUD")
-    print("1.- Creat un usuario: ")
-    print("2.- Leer la informacion de un usuario")
-    print("3.- Actualizar la informacion de un usuario")
-    print("4.- Eliminar a un usuario")
-    opcion = int(input("Ingrese el numero de opcion a realizar: "))
-
-    if (opcion == 1):
-        name = input("Ingrese el nombre del usuario: ")
-        email = input("Ingrese el email: ")
+    def create_user():
+        name = name_entry.get()
+        email = email_entry.get()
         user = createUser(name, email)
         users.insert_one(user).inserted_id
-    elif(opcion == 2):
-        name = readUser()
-        user = users.find_one({ "name" : name })
-        print(f"Esta es la informacion del usuario: \n{user}")
-    elif(opcion == 3):
-        userId = ObjectId(input("Ingrese el id del usuario a actualizar: "))
-        existingUser = users.find_one({ "_id" : userId })
+        messagebox.showinfo("Éxito", "Usuario creado exitosamente")
 
-        if existingUser:
-            updateData = updateUser()
-            users.update_one({ "_id" : userId }, { "$set" : updateData })
+    def read_user():
+        name = name_entry.get()
+        user = users.find_one({"name": name})
+        if user:
+            user_info_label.config(text=f"Información del usuario:\n{user}")
         else:
-            print("No")
-    elif(opcion == 4):
-        userName = deleteUser()
-        users.delete_one({ "name" : userName })
+            user_info_label.config(text="Usuario no encontrado")
+
+    def update_user():
+        user_id = ObjectId(id_entry.get())
+        existing_user = users.find_one({"_id": user_id})
+
+        if existing_user:
+            update_data = updateUser()
+            users.update_one({"_id": user_id}, {"$set": update_data})
+            messagebox.showinfo("Éxito", "Información de usuario actualizada")
+        else:
+            messagebox.showerror("Error", "Usuario no encontrado")
+
+    def delete_user():
+        user_name = name_entry.get()
+        result = users.delete_one({"name": user_name})
+        if result.deleted_count > 0:
+            messagebox.showinfo("Éxito", "Usuario eliminado exitosamente")
+        else:
+            messagebox.showerror("Error", "Usuario no encontrado")
+
+    user_window = tk.Toplevel()
+    user_window.title("Users CRUD")
+
+    name_label = tk.Label(user_window, text="Nombre del usuario:")
+    name_label.grid(row=0, column=0, padx=5, pady=5)
+
+    name_entry = tk.Entry(user_window)
+    name_entry.grid(row=0, column=1, padx=5, pady=5)
+
+    email_label = tk.Label(user_window, text="Email del usuario:")
+    email_label.grid(row=1, column=0, padx=5, pady=5)
+
+    email_entry = tk.Entry(user_window)
+    email_entry.grid(row=1, column=1, padx=5, pady=5)
+
+    id_label = tk.Label(user_window, text="ID del usuario (para actualizar):")
+    id_label.grid(row=2, column=0, padx=5, pady=5)
+
+    id_entry = tk.Entry(user_window)
+    id_entry.grid(row=2, column=1, padx=5, pady=5)
+
+    create_button = tk.Button(user_window, text="Crear Usuario", command=create_user)
+    create_button.grid(row=3, column=0, columnspan=2, pady=10)
+
+    read_button = tk.Button(user_window, text="Leer Usuario", command=read_user)
+    read_button.grid(row=4, column=0, columnspan=2, pady=10)
+
+    update_button = tk.Button(user_window, text="Actualizar Usuario", command=update_user)
+    update_button.grid(row=5, column=0, columnspan=2, pady=10)
+
+    delete_button = tk.Button(user_window, text="Eliminar Usuario", command=delete_user)
+    delete_button.grid(row=6, column=0, columnspan=2, pady=10)
+
+    user_info_label = tk.Label(user_window, text="")
+    user_info_label.grid(row=7, column=0, columnspan=2, pady=10)
 
 def articlesCRUD():
-    print("Articles CRUD")
-    print("1.- Crear un articulo")
-    print("2.- Leer un articulo")
-    print("3.- Actualizar la informacion de un articulo")
-    print("4.- Eliminar a un articulo")
-    opcion = int(input("Ingrese el numero de opcion a realizar: "))
-
-    if (opcion == 1):
-        title = input("Ingrese el titulo del articulo: ")
-        date = input("Ingrese la fecha de hoy: ")
-        text = input("Ingrese el contenido del archivo: ")
+    def create_article():
+        title = title_entry.get()
+        date = date_entry.get()
+        text = text_entry.get("1.0", tk.END)  # Obtiene el contenido del Entry de texto
         article = createArticle(title, date, text)
         articles.insert_one(article).inserted_id
-    elif(opcion == 2):
-        title = readArticle()
-        article = articles.find_one({ "title" : title })
-        print(f"Este es el articulo: \n{article}")
-    elif(opcion == 3):
-        articleId = ObjectId(input("Ingrese el id del articulo a actualizar: "))
-        existingArticle = articles.find_one({ "_id" : articleId })
+        messagebox.showinfo("Éxito", "Artículo creado exitosamente")
 
-        if existingArticle:
-            updateData = updateArticle()
-            articles.update_one({ "_id" : articleId }, { "$set" : updateData })
+    def read_article():
+        title = title_entry.get()
+        article = articles.find_one({"title": title})
+        if article:
+            article_info_label.config(text=f"Información del artículo:\n{article}")
         else:
-            print("No")
-    elif(opcion == 4):
-        title = deleteArticle()
-        articles.delete_one({ "title" : title })
+            article_info_label.config(text="Artículo no encontrado")
+
+    def update_article():
+        article_id = ObjectId(id_entry.get())
+        existing_article = articles.find_one({"_id": article_id})
+
+        if existing_article:
+            update_data = updateArticle()
+            articles.update_one({"_id": article_id}, {"$set": update_data})
+            messagebox.showinfo("Éxito", "Información de artículo actualizada")
+        else:
+            messagebox.showerror("Error", "Artículo no encontrado")
+
+    def delete_article():
+        article_title = title_entry.get()
+        result = articles.delete_one({"title": article_title})
+        if result.deleted_count > 0:
+            messagebox.showinfo("Éxito", "Artículo eliminado exitosamente")
+        else:
+            messagebox.showerror("Error", "Artículo no encontrado")
+
+    article_window = tk.Toplevel()
+    article_window.title("Articles CRUD")
+
+    title_label = tk.Label(article_window, text="Título del artículo:")
+    title_label.grid(row=0, column=0, padx=5, pady=5)
+
+    title_entry = tk.Entry(article_window)
+    title_entry.grid(row=0, column=1, padx=5, pady=5)
+
+    date_label = tk.Label(article_window, text="Fecha del artículo:")
+    date_label.grid(row=1, column=0, padx=5, pady=5)
+
+    date_entry = tk.Entry(article_window)
+    date_entry.grid(row=1, column=1, padx=5, pady=5)
+
+    text_label = tk.Label(article_window, text="Contenido del artículo:")
+    text_label.grid(row=2, column=0, padx=5, pady=5)
+
+    text_entry = tk.Text(article_window, height=5, width=30)
+    text_entry.grid(row=2, column=1, padx=5, pady=5)
+
+    id_label = tk.Label(article_window, text="ID del artículo (para actualizar):")
+    id_label.grid(row=3, column=0, padx=5, pady=5)
+
+    id_entry = tk.Entry(article_window)
+    id_entry.grid(row=3, column=1, padx=5, pady=5)
+
+    create_button = tk.Button(article_window, text="Crear Artículo", command=create_article)
+    create_button.grid(row=4, column=0, columnspan=2, pady=10)
+
+    read_button = tk.Button(article_window, text="Leer Artículo", command=read_article)
+    read_button.grid(row=5, column=0, columnspan=2, pady=10)
+
+    update_button = tk.Button(article_window, text="Actualizar Artículo", command=update_article)
+    update_button.grid(row=6, column=0, columnspan=2, pady=10)
+
+    delete_button = tk.Button(article_window, text="Eliminar Artículo", command=delete_article)
+    delete_button.grid(row=7, column=0, columnspan=2, pady=10)
+
+    article_info_label = tk.Label(article_window, text="")
+    article_info_label.grid(row=8, column=0, columnspan=2, pady=10)
 
 def commentsCRUD():
-    print("comments CRUD")
-    print("1.- Crear un comentario")
-    print("2.- Leer un comentario")
-    print("3.- Actualizar un comentario")
-    print("4.- Eliminar a un comentario")
-    opcion = int(input("Ingrese el numero de opcion a realizar: "))
-
-    if (opcion == 1):
-        name = input("Ingrese el nombre del comentario: ")
-        url = input("Ingrese el nombre del articulo del comentario: ")
-
+    def create_comment():
+        name = name_entry.get()
+        url = url_entry.get()
         comment = createComment(name, url)
         comments.insert_one(comment).inserted_id
-    elif(opcion == 2):
-        name = readComment()
-        comment = comments.find_one({ "name" : name })
-        print(f"Este es el comentario: \n{comment}")
-    elif(opcion == 3):
-        commentId = ObjectId(input("Ingrese el id del comentario a actualizar: "))
-        existingComment = comments.find_one({ "_id" : commentId })
+        messagebox.showinfo("Éxito", "Comentario creado exitosamente")
 
-        if existingComment:
-            updateData = updateComment()
-            comments.update_one({ "_id" : commentId }, { "$set" : updateData })
+    def read_comment():
+        name = name_entry.get()
+        comment = comments.find_one({"name": name})
+        if comment:
+            comment_info_label.config(text=f"Información del comentario:\n{comment}")
         else:
-            print("No")
-    elif(opcion == 4):
-        name = deleteComment()
-        comments.delete_one({ "name" : name })
+            comment_info_label.config(text="Comentario no encontrado")
+
+    def update_comment():
+        comment_id = ObjectId(id_entry.get())
+        existing_comment = comments.find_one({"_id": comment_id})
+
+        if existing_comment:
+            update_data = updateComment()
+            comments.update_one({"_id": comment_id}, {"$set": update_data})
+            messagebox.showinfo("Éxito", "Información de comentario actualizada")
+        else:
+            messagebox.showerror("Error", "Comentario no encontrado")
+
+    def delete_comment():
+        comment_name = name_entry.get()
+        result = comments.delete_one({"name": comment_name})
+        if result.deleted_count > 0:
+            messagebox.showinfo("Éxito", "Comentario eliminado exitosamente")
+        else:
+            messagebox.showerror("Error", "Comentario no encontrado")
+
+    comment_window = tk.Toplevel()
+    comment_window.title("Comments CRUD")
+
+    name_label = tk.Label(comment_window, text="Nombre del comentario:")
+    name_label.grid(row=0, column=0, padx=5, pady=5)
+
+    name_entry = tk.Entry(comment_window)
+    name_entry.grid(row=0, column=1, padx=5, pady=5)
+
+    url_label = tk.Label(comment_window, text="URL del artículo del comentario:")
+    url_label.grid(row=1, column=0, padx=5, pady=5)
+
+    url_entry = tk.Entry(comment_window)
+    url_entry.grid(row=1, column=1, padx=5, pady=5)
+
+    id_label = tk.Label(comment_window, text="ID del comentario (para actualizar):")
+    id_label.grid(row=2, column=0, padx=5, pady=5)
+
+    id_entry = tk.Entry(comment_window)
+    id_entry.grid(row=2, column=1, padx=5, pady=5)
+
+    create_button = tk.Button(comment_window, text="Crear Comentario", command=create_comment)
+    create_button.grid(row=3, column=0, columnspan=2, pady=10)
+
+    read_button = tk.Button(comment_window, text="Leer Comentario", command=read_comment)
+    read_button.grid(row=4, column=0, columnspan=2, pady=10)
+
+    update_button = tk.Button(comment_window, text="Actualizar Comentario", command=update_comment)
+    update_button.grid(row=5, column=0, columnspan=2, pady=10)
+
+    delete_button = tk.Button(comment_window, text="Eliminar Comentario", command=delete_comment)
+    delete_button.grid(row=6, column=0, columnspan=2, pady=10)
+
+    comment_info_label = tk.Label(comment_window, text="")
+    comment_info_label.grid(row=7, column=0, columnspan=2, pady=10)
 
 def categoriesCRUD():
-    print("categories CRUD")
-    print("1.- Crear una categoria")
-    print("2.- Ver una categoria")
-    print("3.- Actualizar una categoria")
-    print("4.- Eliminar una categoria")
-    opcion = int(input("Ingrese el numero de opcion a realizar: "))
+    def create_categorie():
+        name = name_entry.get()
+        article_name = article_name_entry.get()
+        category = createCategorie(name, article_name)
+        categories.insert_one(category).inserted_id
+        messagebox.showinfo("Éxito", "Categoría creada exitosamente")
 
-    if (opcion == 1):
-        name = input("Ingrese el nombre de la categoria: ")
-        url = input("Ingrese el nombre del articulo de la categoria: ")
-
-        categorie = createCategorie(name, url)
-        categories.insert_one(categorie).inserted_id
-    elif(opcion == 2):
-        name = readCategorie()
-        categorie = categories.find_one({ "name" : name })
-        print(f"Esta es la categoria: \n{categorie}")
-    elif(opcion == 3):
-        categorieId = ObjectId(input("Ingrese el id de la categoria a actualizar: "))
-        existingCategorie = comments.find_one({ "_id" : categorieId })
-
-        if existingCategorie:
-            updateData = updateCategorie()
-            categories.update_one({ "_id" : categorieId }, { "$set" : updateData })
+    def read_categorie():
+        name = name_entry.get()
+        category = categories.find_one({"name": name})
+        if category:
+            category_info_label.config(text=f"Información de la categoría:\n{category}")
         else:
-            print("No")
-    elif(opcion == 4):
-        name = deleteCategorie()
-        categories.delete_one({ "name" : name })
+            category_info_label.config(text="Categoría no encontrada")
+
+    def update_categorie():
+        category_id = ObjectId(id_entry.get())
+        existing_category = categories.find_one({"_id": category_id})
+
+        if existing_category:
+            update_data = updateCategorie()
+            categories.update_one({"_id": category_id}, {"$set": update_data})
+            messagebox.showinfo("Éxito", "Información de categoría actualizada")
+        else:
+            messagebox.showerror("Error", "Categoría no encontrada")
+
+    def delete_categorie():
+        category_name = name_entry.get()
+        result = categories.delete_one({"name": category_name})
+        if result.deleted_count > 0:
+            messagebox.showinfo("Éxito", "Categoría eliminada exitosamente")
+        else:
+            messagebox.showerror("Error", "Categoría no encontrada")
+
+    categorie_window = tk.Toplevel()
+    categorie_window.title("Categories CRUD")
+
+    name_label = tk.Label(categorie_window, text="Nombre de la categoría:")
+    name_label.grid(row=0, column=0, padx=5, pady=5)
+
+    name_entry = tk.Entry(categorie_window)
+    name_entry.grid(row=0, column=1, padx=5, pady=5)
+
+    article_name_label = tk.Label(categorie_window, text="Nombre del artículo de la categoría:")
+    article_name_label.grid(row=1, column=0, padx=5, pady=5)
+
+    article_name_entry = tk.Entry(categorie_window)
+    article_name_entry.grid(row=1, column=1, padx=5, pady=5)
+
+    id_label = tk.Label(categorie_window, text="ID de la categoría (para actualizar):")
+    id_label.grid(row=2, column=0, padx=5, pady=5)
+
+    id_entry = tk.Entry(categorie_window)
+    id_entry.grid(row=2, column=1, padx=5, pady=5)
+
+    create_button = tk.Button(categorie_window, text="Crear Categoría", command=create_categorie)
+    create_button.grid(row=3, column=0, columnspan=2, pady=10)
+
+    read_button = tk.Button(categorie_window, text="Ver Categoría", command=read_categorie)
+    read_button.grid(row=4, column=0, columnspan=2, pady=10)
+
+    update_button = tk.Button(categorie_window, text="Actualizar Categoría", command=update_categorie)
+    update_button.grid(row=5, column=0, columnspan=2, pady=10)
+
+    delete_button = tk.Button(categorie_window, text="Eliminar Categoría", command=delete_categorie)
+    delete_button.grid(row=6, column=0, columnspan=2, pady=10)
+
+    category_info_label = tk.Label(categorie_window, text="")
+    category_info_label.grid(row=7, column=0, columnspan=2, pady=10)
 
 def tagsCRUD():
-    print("tags CRUD")
-    print("1.- Crear un tag")
-    print("2.- Ver un tag")
-    print("3.- Actualizar un tag")
-    print("4.- Eliminar un tag")
-    opcion = int(input("Ingrese el numero de opcion a realizar: "))
-
-    if (opcion == 1):
-        name = input("Ingrese el nombre del tag: ")
-        url = input("Ingrese el nombre del articulo del tag: ")
-
-        tag = createTag(name, url)
+    def create_tag():
+        name = name_entry.get()
+        article_name = article_name_entry.get()
+        tag = createTag(name, article_name)
         tags.insert_one(tag).inserted_id
-    elif(opcion == 2):
-        name = readTag()
-        tag = tags.find_one({ "name" : name })
-        print(f"Esta es la categoria: \n{tag}")
-    elif(opcion == 3):
-        tagId = ObjectId(input("Ingrese el id del tag a actualizar: "))
-        existingTag = tags.find_one({ "_id" : tagId })
+        messagebox.showinfo("Éxito", "Tag creado exitosamente")
 
-        if existingTag:
-            updateData = updateTag()
-            tags.update_one({ "_id" : tagId }, { "$set" : updateData })
+    def read_tag():
+        name = name_entry.get()
+        tag = tags.find_one({"name": name})
+        if tag:
+            tag_info_label.config(text=f"Información del tag:\n{tag}")
         else:
-            print("No")
-    elif(opcion == 4):
-        name = deleteTag()
-        tags.delete_one({ "name" : name })
+            tag_info_label.config(text="Tag no encontrado")
+
+    def update_tag():
+        tag_id = ObjectId(id_entry.get())
+        existing_tag = tags.find_one({"_id": tag_id})
+
+        if existing_tag:
+            update_data = updateTag()
+            tags.update_one({"_id": tag_id}, {"$set": update_data})
+            messagebox.showinfo("Éxito", "Información de tag actualizada")
+        else:
+            messagebox.showerror("Error", "Tag no encontrado")
+
+    def delete_tag():
+        tag_name = name_entry.get()
+        result = tags.delete_one({"name": tag_name})
+        if result.deleted_count > 0:
+            messagebox.showinfo("Éxito", "Tag eliminado exitosamente")
+        else:
+            messagebox.showerror("Error", "Tag no encontrado")
+
+    tag_window = tk.Toplevel()
+    tag_window.title("Tags CRUD")
+
+    name_label = tk.Label(tag_window, text="Nombre del tag:")
+    name_label.grid(row=0, column=0, padx=5, pady=5)
+
+    name_entry = tk.Entry(tag_window)
+    name_entry.grid(row=0, column=1, padx=5, pady=5)
+
+    article_name_label = tk.Label(tag_window, text="Nombre del artículo del tag:")
+    article_name_label.grid(row=1, column=0, padx=5, pady=5)
+
+    article_name_entry = tk.Entry(tag_window)
+    article_name_entry.grid(row=1, column=1, padx=5, pady=5)
+
+    id_label = tk.Label(tag_window, text="ID del tag (para actualizar):")
+    id_label.grid(row=2, column=0, padx=5, pady=5)
+
+    id_entry = tk.Entry(tag_window)
+    id_entry.grid(row=2, column=1, padx=5, pady=5)
+
+    create_button = tk.Button(tag_window, text="Crear Tag", command=create_tag)
+    create_button.grid(row=3, column=0, columnspan=2, pady=10)
+
+    read_button = tk.Button(tag_window, text="Ver Tag", command=read_tag)
+    read_button.grid(row=4, column=0, columnspan=2, pady=10)
+
+    update_button = tk.Button(tag_window, text="Actualizar Tag", command=update_tag)
+    update_button.grid(row=5, column=0, columnspan=2, pady=10)
+
+    delete_button = tk.Button(tag_window, text="Eliminar Tag", command=delete_tag)
+    delete_button.grid(row=6, column=0, columnspan=2, pady=10)
+
+    tag_info_label = tk.Label(tag_window, text="")
+    tag_info_label.grid(row=7, column=0, columnspan=2, pady=10)
+        
+show_menu()
